@@ -1,0 +1,42 @@
+# === IDEs ===
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# === Java / Maven ===
+target/
+.mvn/wrapper/maven-wrapper.jar
+*.class
+hs_err_pid*
+
+# === Node ===
+node_modules/
+.next/
+out/
+.npm/
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Env files (NEVER commit secrets) ===
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# === Logs ===
+*.log
+logs/
+
+# === Build output ===
+dist/
+build/
+
+# === Docker ===
+# (keep docker-compose.yml in git, ignore overrides if user-specific)
+
+# === JWT keys (commit only example keys, never prod keys) ===
+**/keys/private.pem
+**/keys/public.pem
