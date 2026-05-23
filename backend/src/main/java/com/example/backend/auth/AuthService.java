@@ -42,7 +42,7 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest req) {
-        User user = userRepository.findByEmail(req.email())
+        User user = userRepository.findByEmailAndDeletedAtIsNull(req.email())
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
         if (user.getPasswordHash() == null || !passwordEncoder.matches(req.password(), user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid email or password");

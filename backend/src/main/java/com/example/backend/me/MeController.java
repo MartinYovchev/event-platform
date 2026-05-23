@@ -1,6 +1,9 @@
 package com.example.backend.me;
 
 import com.example.backend.auth.dto.UserResponse;
+import com.example.backend.event.EventService;
+import com.example.backend.event.EventStatus;
+import com.example.backend.event.dto.EventListItemResponse;
 import com.example.backend.reservation.ReservationService;
 import com.example.backend.reservation.dto.ReservationResponse;
 import com.example.backend.user.User;
@@ -22,20 +25,20 @@ public class MeController {
 
     private final UserRepository userRepository;
     private final ReservationService reservationService;
+    private final EventService eventService;
 
-    public MeController(UserRepository userRepository, ReservationService reservationService) {
+    public MeController(UserRepository userRepository,
+                        ReservationService reservationService,
+                        EventService eventService) {
         this.userRepository = userRepository;
         this.reservationService = reservationService;
+        this.eventService = eventService;
     }
 
     @PostMapping("/become-organizer")
     @Transactional
     public UserResponse becomeOrganizer(Authentication auth) {
-        if (auth == null || auth.getName() == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-        }
-        User u = userRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        User u = requireActive(auth);
         u.setIsOrganizer(true);
         return UserResponse.from(u);
     }
@@ -46,8 +49,30 @@ public class MeController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             Authentication auth) {
+        // Resolve the caller via the active-user finder so a soft-deleted user with a
+        // still-valid JWT is rejected here too.
+        User me = requireActive(auth);
         boolean upcoming = "upcoming".equalsIgnoreCase(when);
-        return reservationService.listMine(auth.getName(), upcoming, page, size)
+        return reservationService.listMine(me.getEmail(), upcoming, page, size)
                 .map(ReservationResponse::from);
+    }
+
+    @GetMapping("/events")
+    public Page<EventListItemResponse> myEvents(
+            @RequestParam(required = false) EventStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            Authentication auth) {
+        User me = requireActive(auth);
+        return eventService.listMine(me, status, page, size)
+                .map(EventListItemResponse::from);
+    }
+
+    private User requireActive(Authentication auth) {
+        if (auth == null || auth.getName() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+        return userRepository.findByEmailAndDeletedAtIsNull(auth.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
     }
 }

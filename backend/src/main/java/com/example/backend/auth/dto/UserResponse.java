@@ -4,13 +4,16 @@ import com.example.backend.user.AuthProvider;
 import com.example.backend.user.Role;
 import com.example.backend.user.User;
 
+import java.time.Instant;
+
 public record UserResponse(
         Long id,
         String email,
         String displayName,
         Role role,
         AuthProvider provider,
-        Boolean isOrganizer
+        Boolean isOrganizer,
+        Instant createdAt
 ) {
     public static UserResponse from(User u) {
         return new UserResponse(
@@ -19,7 +22,8 @@ public record UserResponse(
                 u.getDisplayName(),
                 u.getRole(),
                 u.getProvider(),
-                Boolean.TRUE.equals(u.getIsOrganizer())
+                Boolean.TRUE.equals(u.getIsOrganizer()),
+                u.getCreatedAt()
         );
     }
 }

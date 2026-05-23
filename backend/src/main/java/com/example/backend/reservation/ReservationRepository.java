@@ -18,6 +18,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findAllByEventAndStatus(Event event, ReservationStatus status);
 
+    List<Reservation> findAllByUserAndStatus(User user, ReservationStatus status);
+
     @Query(value = """
         SELECT r FROM Reservation r LEFT JOIN FETCH r.event e
         WHERE r.user = :user

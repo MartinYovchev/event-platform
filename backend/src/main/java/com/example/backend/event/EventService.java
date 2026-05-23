@@ -38,6 +38,16 @@ public class EventService {
 
     // ---------- queries ----------
 
+    public Page<Event> listMine(User organizer, EventStatus status, int page, int size) {
+        List<Specification<Event>> parts = new ArrayList<>();
+        parts.add((root, q, cb) -> cb.equal(root.get("organizer"), organizer));
+        if (status != null) {
+            parts.add((root, q, cb) -> cb.equal(root.get("status"), status));
+        }
+        Specification<Event> spec = Specification.allOf(parts);
+        return eventRepository.findAll(spec, PageRequest.of(page, size, Sort.by("startAt").descending()));
+    }
+
     public Page<Event> listPublished(String search, Instant from, Instant to, int page, int size) {
         List<Specification<Event>> parts = new ArrayList<>();
         parts.add((root, q, cb) -> cb.equal(root.get("status"), EventStatus.PUBLISHED));
@@ -123,12 +133,22 @@ public class EventService {
         if (e.getStatus() == EventStatus.CANCELLED) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Already cancelled");
         }
+        applyCancellation(e);
+        return e;
+    }
+
+    // Shared cascade: cancel every ACTIVE reservation on this event, zero seats_taken,
+    // mark the event itself CANCELLED. Must be called inside an active transaction.
+    // Used by cancel(callerEmail, id) (after the ownership check) and by
+    // UserService.deleteAccount when cleaning up an organizer's events.
+    // Public for cross-package access; not intended as a general API.
+    public void applyCancellation(Event e) {
+        if (e.getStatus() == EventStatus.CANCELLED) return;
         for (Reservation r : reservationRepository.findAllByEventAndStatus(e, ReservationStatus.ACTIVE)) {
             r.setStatus(ReservationStatus.CANCELLED);
         }
         e.setSeatsTaken(0);
         e.setStatus(EventStatus.CANCELLED);
-        return e;
     }
 
     @Transactional

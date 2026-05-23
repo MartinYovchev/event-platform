@@ -90,7 +90,7 @@ public class ReservationService {
 
     @Transactional(readOnly = true)
     public Page<Reservation> listMine(String callerEmail, boolean upcoming, int page, int size) {
-        User user = userRepository.findByEmail(callerEmail)
+        User user = userRepository.findByEmailAndDeletedAtIsNull(callerEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
         return reservationRepository.findMine(user, upcoming, Instant.now(), PageRequest.of(page, size));
     }

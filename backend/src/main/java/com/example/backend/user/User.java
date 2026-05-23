@@ -42,6 +42,9 @@ public class User {
     @Column(name = "is_organizer", nullable = false)
     private Boolean isOrganizer = false;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
     private Instant createdAt;
 
@@ -68,6 +71,9 @@ public class User {
 
     public Boolean getIsOrganizer() { return isOrganizer; }
     public void setIsOrganizer(Boolean isOrganizer) { this.isOrganizer = isOrganizer; }
+
+    public Instant getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
 
     public Instant getCreatedAt() { return createdAt; }
 }
