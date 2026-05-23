@@ -39,6 +39,9 @@ public class User {
     @Column(name = "provider_subject")
     private String providerSubject;
 
+    @Column(name = "is_organizer", nullable = false)
+    private Boolean isOrganizer = false;
+
     @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
     private Instant createdAt;
 
@@ -62,6 +65,9 @@ public class User {
 
     public String getProviderSubject() { return providerSubject; }
     public void setProviderSubject(String providerSubject) { this.providerSubject = providerSubject; }
+
+    public Boolean getIsOrganizer() { return isOrganizer; }
+    public void setIsOrganizer(Boolean isOrganizer) { this.isOrganizer = isOrganizer; }
 
     public Instant getCreatedAt() { return createdAt; }
 }

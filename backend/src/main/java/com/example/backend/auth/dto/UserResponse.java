@@ -9,9 +9,17 @@ public record UserResponse(
         String email,
         String displayName,
         Role role,
-        AuthProvider provider
+        AuthProvider provider,
+        Boolean isOrganizer
 ) {
     public static UserResponse from(User u) {
-        return new UserResponse(u.getId(), u.getEmail(), u.getDisplayName(), u.getRole(), u.getProvider());
+        return new UserResponse(
+                u.getId(),
+                u.getEmail(),
+                u.getDisplayName(),
+                u.getRole(),
+                u.getProvider(),
+                Boolean.TRUE.equals(u.getIsOrganizer())
+        );
     }
 }
