@@ -2,8 +2,12 @@ package com.example.backend.event;
 
 import com.example.backend.event.dto.CreateEventRequest;
 import com.example.backend.event.dto.UpdateEventRequest;
+import com.example.backend.reservation.Reservation;
+import com.example.backend.reservation.ReservationRepository;
+import com.example.backend.reservation.ReservationStatus;
 import com.example.backend.user.User;
 import com.example.backend.user.UserRepository;
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -22,10 +26,14 @@ public class EventService {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final ReservationRepository reservationRepository;
 
-    public EventService(EventRepository eventRepository, UserRepository userRepository) {
+    public EventService(EventRepository eventRepository,
+                        UserRepository userRepository,
+                        ReservationRepository reservationRepository) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
+        this.reservationRepository = reservationRepository;
     }
 
     // ---------- queries ----------
@@ -50,12 +58,16 @@ public class EventService {
         return eventRepository.findAll(spec, PageRequest.of(page, size, Sort.by("startAt").ascending()));
     }
 
+    @Transactional(readOnly = true)
     public Event getVisibleById(Long id, String callerEmailOrNull) {
         Event e = eventRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (e.getStatus() == EventStatus.PUBLISHED) return e;
-        if (callerEmailOrNull != null && e.getOrganizer().getEmail().equals(callerEmailOrNull)) return e;
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        boolean visible = e.getStatus() == EventStatus.PUBLISHED
+                || (callerEmailOrNull != null && e.getOrganizer().getEmail().equals(callerEmailOrNull));
+        if (!visible) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        // Hydrate organizer inside the tx so EventResponse.from can read it after detach.
+        Hibernate.initialize(e.getOrganizer());
+        return e;
     }
 
     // ---------- mutations ----------
@@ -111,8 +123,11 @@ public class EventService {
         if (e.getStatus() == EventStatus.CANCELLED) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Already cancelled");
         }
+        for (Reservation r : reservationRepository.findAllByEventAndStatus(e, ReservationStatus.ACTIVE)) {
+            r.setStatus(ReservationStatus.CANCELLED);
+        }
+        e.setSeatsTaken(0);
         e.setStatus(EventStatus.CANCELLED);
-        // Phase 2: cascade-cancel active reservations and reset seats_taken here.
         return e;
     }
 

@@ -1,5 +1,6 @@
 package com.example.backend.common;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -36,6 +37,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.of("INVALID_CREDENTIALS", "Invalid email or password"));
+    }
+
+    // Unique-index violations (e.g. concurrent reserve hitting the partial unique on
+    // reservations(user_id, event_id) WHERE status='ACTIVE') surface as a 409 rather
+    // than the fallback 500.
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of("CONFLICT", "Conflicting concurrent change"));
     }
 
     @ExceptionHandler(Exception.class)
