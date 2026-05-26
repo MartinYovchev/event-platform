@@ -31,7 +31,9 @@ const isoInstant = z
 
 const priceString = z
   .string()
-  .regex(/^\d+(\.\d{1,2})?$/, { message: "Must be a non-negative number with up to 2 decimals" });
+  .regex(/^\d+(\.\d{1,2})?$/, {
+    message: "Must be a non-negative number with up to 2 decimals",
+  });
 
 export const createEventSchema = z
   .object({
@@ -44,7 +46,7 @@ export const createEventSchema = z
     endAt: isoInstant,
     capacity: z.number().int().min(1),
     price: priceString,
-    coverImageUrl: z.union([z.string().url(), z.literal("")]).optional(),
+    coverImageUrl: z.union([z.string(), z.literal("")]).nullish(),
     cancellationCutoffHours: z.number().int().min(0).max(168).optional(),
   })
   .refine((data) => Date.parse(data.endAt) > Date.parse(data.startAt), {

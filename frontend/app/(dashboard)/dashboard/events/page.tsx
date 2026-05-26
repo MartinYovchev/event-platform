@@ -85,6 +85,7 @@ export default async function MyEventsPage({
         description="Manage events you organize."
         actions={
           <Button
+            nativeButton={false}
             render={
               <Link href="/dashboard/events/new">
                 <Plus />
@@ -112,6 +113,7 @@ export default async function MyEventsPage({
           }
           action={
             <Button
+              nativeButton={false}
               render={
                 <Link href="/dashboard/events/new">
                   <Plus />

@@ -11,6 +11,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -81,14 +82,16 @@ export function UserMenu({ me, variant = "topbar" }: UserMenuProps) {
         }
       />
       <DropdownMenuContent align={variant === "sidebar" ? "start" : "end"} sideOffset={8} className="w-56">
-        <DropdownMenuLabel className="flex flex-col gap-0.5">
-          <span className="truncate text-sm font-medium text-foreground">
-            {me.displayName}
-          </span>
-          <span className="truncate text-xs text-muted-foreground">
-            {me.email}
-          </span>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="flex flex-col gap-0.5">
+            <span className="truncate text-sm font-medium text-foreground">
+              {me.displayName}
+            </span>
+            <span className="truncate text-xs text-muted-foreground">
+              {me.email}
+            </span>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           render={
@@ -111,13 +114,10 @@ export function UserMenu({ me, variant = "topbar" }: UserMenuProps) {
           variant="destructive"
           onClick={handleSignOut}
           disabled={loggingOut}
-          render={
-            <button type="button" className="w-full">
-              <LogOut />
-              {loggingOut ? "Signing out…" : "Sign out"}
-            </button>
-          }
-        />
+        >
+          <LogOut />
+          {loggingOut ? "Signing out…" : "Sign out"}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -127,8 +127,8 @@ export function UserMenu({ me, variant = "topbar" }: UserMenuProps) {
 export function GuestActions() {
   return (
     <div className="flex items-center gap-2">
-      <Button variant="ghost" size="sm" render={<Link href="/login">Sign in</Link>} />
-      <Button size="sm" render={<Link href="/register">Register</Link>} />
+      <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/login">Sign in</Link>} />
+      <Button size="sm" nativeButton={false} render={<Link href="/register">Register</Link>} />
     </div>
   );
 }

@@ -35,7 +35,7 @@ export function UpcomingReservationsTable({
         title="No reservations yet"
         description="Reserve a spot at an event to see it here."
         action={
-          <Button size="sm" render={<Link href="/events">Browse events</Link>} />
+          <Button size="sm" nativeButton={false} render={<Link href="/events">Browse events</Link>} />
         }
       />
     );
@@ -83,6 +83,7 @@ export function UpcomingReservationsTable({
                 <Button
                   variant="ghost"
                   size="sm"
+                  nativeButton={false}
                   render={
                     <Link href={`/dashboard/reservations#r-${r.id}`}>
                       Manage

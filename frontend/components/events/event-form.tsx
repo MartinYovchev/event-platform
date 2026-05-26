@@ -233,6 +233,7 @@ export function EventForm(props: EventFormProps) {
       const parsed = createEventSchema.safeParse(
         body as unknown as CreateEventInput,
       );
+
       if (!parsed.success) {
         const first = parsed.error.issues[0];
         setSubmitError(first?.message ?? "Invalid input");
