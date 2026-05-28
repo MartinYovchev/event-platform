@@ -1,6 +1,7 @@
 package com.example.backend.auth;
 
 import com.example.backend.auth.dto.AuthResponse;
+import com.example.backend.auth.dto.GoogleAuthRequest;
 import com.example.backend.auth.dto.LoginRequest;
 import com.example.backend.auth.dto.RegisterRequest;
 import jakarta.validation.Valid;
@@ -29,5 +30,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
         return ResponseEntity.ok(authService.login(req));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> google(@Valid @RequestBody GoogleAuthRequest req) {
+        return ResponseEntity.ok(authService.loginWithGoogle(req.idToken()));
     }
 }

@@ -72,6 +72,27 @@ export async function registerAction(
   }
 }
 
+export async function googleAuthAction(
+  idToken: string,
+): Promise<ActionResult<UserResponse>> {
+  if (!idToken) {
+    return { ok: false, error: { code: "INVALID_REQUEST", message: "Missing Google credential" } };
+  }
+  try {
+    const auth = await serverFetch<AuthResponse>("/api/auth/google", {
+      method: "POST",
+      auth: false,
+      body: JSON.stringify({ idToken }),
+    });
+    const jar = await cookies();
+    jar.set(COOKIE_NAME, auth.token, cookieOptions(auth.expiresInSeconds));
+    revalidatePath("/", "layout");
+    return { ok: true, data: auth.user };
+  } catch (err) {
+    return actionError(err, "Google sign in failed. Please try again.");
+  }
+}
+
 export async function logoutAction(): Promise<void> {
   const jar = await cookies();
   jar.delete(COOKIE_NAME);

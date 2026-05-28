@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { registerAction } from "@/lib/actions/auth";
 import { registerSchema, type RegisterInput } from "@/lib/schemas";
+import { GoogleSignInButton } from "@/components/profile/google-sign-in-button";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -84,11 +85,11 @@ export default function RegisterPage({
                 Boolean(form.formState.errors.displayName) || undefined
               }
             />
-            {form.formState.errors.displayName ? (
+            {form.formState.errors.displayName ?
               <span className="text-xs text-destructive">
                 {form.formState.errors.displayName.message}
               </span>
-            ) : null}
+            : null}
           </div>
 
           <div className="grid gap-1.5">
@@ -101,11 +102,11 @@ export default function RegisterPage({
               required
               aria-invalid={Boolean(form.formState.errors.email) || undefined}
             />
-            {form.formState.errors.email ? (
+            {form.formState.errors.email ?
               <span className="text-xs text-destructive">
                 {form.formState.errors.email.message}
               </span>
-            ) : null}
+            : null}
           </div>
 
           <div className="grid gap-1.5">
@@ -118,24 +119,25 @@ export default function RegisterPage({
               maxLength={72}
               {...form.register("password")}
               required
-              aria-invalid={Boolean(form.formState.errors.password) || undefined}
+              aria-invalid={
+                Boolean(form.formState.errors.password) || undefined
+              }
             />
-            {form.formState.errors.password ? (
+            {form.formState.errors.password ?
               <span className="text-xs text-destructive">
                 {form.formState.errors.password.message}
               </span>
-            ) : (
-              <span className="text-xs text-muted-foreground">
+            : <span className="text-xs text-muted-foreground">
                 At least 8 characters.
               </span>
-            )}
+            }
           </div>
 
-          {submitError ? (
+          {submitError ?
             <p className="text-sm text-destructive" role="alert">
               {submitError}
             </p>
-          ) : null}
+          : null}
 
           <Button
             type="submit"
@@ -143,15 +145,19 @@ export default function RegisterPage({
             size="lg"
             disabled={pending || form.formState.isSubmitting}
           >
-            {pending || form.formState.isSubmitting ? (
+            {pending || form.formState.isSubmitting ?
               <Loader2 className="animate-spin" />
-            ) : (
-              <UserPlus />
-            )}
+            : <UserPlus />}
             Create account
           </Button>
         </form>
       </CardContent>
+      <div className="my-4 flex items-center gap-2 text-xs text-muted-foreground">
+        <span className="h-px flex-1 bg-border" />
+        or
+        <span className="h-px flex-1 bg-border" />
+      </div>
+      <GoogleSignInButton next={next} />
       <CardFooter className="justify-center text-sm text-muted-foreground">
         Already have an account?&nbsp;
         <Link

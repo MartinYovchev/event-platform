@@ -1,37 +1,3 @@
-// Source of truth for backend DTO shapes.
-//
-// Mirrors the Spring Boot backend at /backend/src/main/java/com/example/backend.
-// Maintained by `backend-watcher-beacon`. Do not edit by hand without coordinating
-// via the team protocol — consumers (`api-courier-cobalt` hooks, forms, etc.) depend on these.
-//
-// Mapping:
-//   Role                     -> com.example.backend.user.Role
-//   AuthProvider             -> com.example.backend.user.AuthProvider
-//   EventStatus              -> com.example.backend.event.EventStatus
-//   ReservationStatus        -> com.example.backend.reservation.ReservationStatus
-//   UserResponse             -> com.example.backend.auth.dto.UserResponse
-//   AuthResponse             -> com.example.backend.auth.dto.AuthResponse
-//   LoginRequest             -> com.example.backend.auth.dto.LoginRequest
-//   RegisterRequest          -> com.example.backend.auth.dto.RegisterRequest
-//   UpdateProfileRequest     -> com.example.backend.user.dto.UpdateProfileRequest
-//   ChangePasswordRequest    -> com.example.backend.user.dto.ChangePasswordRequest
-//   EventResponse            -> com.example.backend.event.dto.EventResponse
-//   EventListItemResponse    -> com.example.backend.event.dto.EventListItemResponse
-//   CreateEventRequest       -> com.example.backend.event.dto.CreateEventRequest
-//   UpdateEventRequest       -> com.example.backend.event.dto.UpdateEventRequest
-//   ReservationResponse      -> com.example.backend.reservation.dto.ReservationResponse
-//   CreateReservationRequest -> com.example.backend.reservation.dto.CreateReservationRequest
-//   ErrorResponse            -> com.example.backend.common.ErrorResponse
-//   Page<T>                  -> org.springframework.data.domain.Page (default Jackson shape)
-//
-// Conventions:
-//   - All `Instant` fields are ISO-8601 strings (Spring's default Jackson serialization).
-//   - All `BigDecimal` fields (e.g. `price`) are decimal strings to preserve precision.
-//   - Java enums are serialized as their `name()` string (default Jackson behavior, also
-//     confirmed by `EventResponse.from` / `ReservationResponse.from` calling `.name()`).
-
-// ---------- Enums ----------
-
 export type Role = "USER" | "ADMIN";
 
 export type AuthProvider = "LOCAL" | "GOOGLE";
@@ -39,8 +5,6 @@ export type AuthProvider = "LOCAL" | "GOOGLE";
 export type EventStatus = "DRAFT" | "PUBLISHED" | "CANCELLED";
 
 export type ReservationStatus = "ACTIVE" | "CANCELLED";
-
-// ---------- User / Auth ----------
 
 export interface UserResponse {
   id: number;
@@ -186,4 +150,8 @@ export interface Page<T> {
   size: number;
   numberOfElements: number;
   empty: boolean;
+}
+
+export interface GoogleAuthRequest {
+  idToken: string;
 }

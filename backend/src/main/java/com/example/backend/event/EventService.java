@@ -36,7 +36,6 @@ public class EventService {
         this.reservationRepository = reservationRepository;
     }
 
-    // ---------- queries ----------
 
     public Page<Event> listMine(User organizer, EventStatus status, int page, int size) {
         List<Specification<Event>> parts = new ArrayList<>();
@@ -75,12 +74,10 @@ public class EventService {
         boolean visible = e.getStatus() == EventStatus.PUBLISHED
                 || (callerEmailOrNull != null && e.getOrganizer().getEmail().equals(callerEmailOrNull));
         if (!visible) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        // Hydrate organizer inside the tx so EventResponse.from can read it after detach.
         Hibernate.initialize(e.getOrganizer());
         return e;
     }
 
-    // ---------- mutations ----------
 
     @Transactional
     public Event create(String callerEmail, CreateEventRequest req) {

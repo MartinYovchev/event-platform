@@ -1,9 +1,11 @@
 package com.example.backend.auth;
 
+import com.example.backend.auth.components.GoogleTokenVerifier;
 import com.example.backend.auth.dto.AuthResponse;
 import com.example.backend.auth.dto.LoginRequest;
 import com.example.backend.auth.dto.RegisterRequest;
 import com.example.backend.auth.dto.UserResponse;
+import com.example.backend.user.AuthProvider;
 import com.example.backend.user.User;
 import com.example.backend.user.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -19,13 +21,16 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final GoogleTokenVerifier googleTokenVerifier;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
+                       JwtService jwtService,
+                       GoogleTokenVerifier googleTokenVerifier) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.googleTokenVerifier = googleTokenVerifier;
     }
 
     @Transactional
@@ -53,5 +58,39 @@ public class AuthService {
     public AuthResponse toAuthResponse(User user) {
         String token = jwtService.issue(user);
         return new AuthResponse(token, jwtService.getExpirationSeconds(), UserResponse.from(user));
+    }
+
+    @Transactional
+    public AuthResponse loginWithGoogle(String idToken) {
+        GoogleTokenVerifier.GoogleUser g = googleTokenVerifier.verify(idToken);
+
+        User user = userRepository
+                .findByProviderAndProviderSubject(AuthProvider.GOOGLE, g.subject())
+                .orElse(null);
+
+        if (user != null) {
+            if (user.getDeletedAt() != null) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Account is no longer active");
+            }
+        } else {
+            if (userRepository.existsByEmail(g.email())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "This email is already registered. Please sign in with your password.");
+            }
+            user = new User();
+            user.setEmail(g.email());
+            user.setProvider(AuthProvider.GOOGLE);
+            user.setProviderSubject(g.subject());
+            user.setPasswordHash(null);
+
+            String displayName = (g.name() != null && !g.name().isBlank())
+                    ? g.name() : g.email().split("@")[0];
+            if (displayName.length() > 100) displayName = displayName.substring(0, 100);
+            user.setDisplayName(displayName);
+
+            user = userRepository.save(user);
+        }
+
+        return toAuthResponse(user);
     }
 }
