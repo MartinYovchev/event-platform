@@ -50,6 +50,22 @@ public class Reservation {
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private Instant updatedAt;
 
+    @Column(name = "stripe_session_id")
+    private String stripeSessionId;
+
+    @Column(name = "stripe_payment_intent_id")
+    private String stripePaymentIntentId;
+
+    @Column(name = "paid_at")
+    private Instant paidAt;
+
+    public String getStripeSessionId() { return stripeSessionId; }
+    public void setStripeSessionId(String v) { this.stripeSessionId = v; }
+    public String getStripePaymentIntentId() { return stripePaymentIntentId; }
+    public void setStripePaymentIntentId(String v) { this.stripePaymentIntentId = v; }
+    public Instant getPaidAt() { return paidAt; }
+    public void setPaidAt(Instant v) { this.paidAt = v; }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
