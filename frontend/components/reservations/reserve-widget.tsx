@@ -33,35 +33,45 @@ export function ReserveWidget({
   const router = useRouter();
   const seatsLeft = Math.max(0, event.capacity - event.seatsTaken);
   const maxQty = Math.min(20, seatsLeft);
+  const [currentTime] = useState(() => Date.now());
 
   const [quantity, setQuantity] = useState<number>(1);
   const [pending, startTransition] = useTransition();
 
   const startInPast = useMemo(() => {
     try {
-      return new Date(event.startAt).getTime() <= Date.now();
+      return (
+        new Date(event.startAt).getTime() <= new Date(currentTime).getTime()
+      );
     } catch {
       return true;
     }
-  }, [event.startAt]);
+  }, [event.startAt, currentTime]);
 
   const notPublished = event.status !== "PUBLISHED";
   const soldOut = seatsLeft <= 0;
   const isSignedIn = me !== null;
 
   let blockedReason: string | null = null;
-  if (event.status === "CANCELLED") blockedReason = "This event has been cancelled.";
-  else if (event.status === "DRAFT") blockedReason = "This event isn't open for reservations yet.";
+  if (event.status === "CANCELLED")
+    blockedReason = "This event has been cancelled.";
+  else if (event.status === "DRAFT")
+    blockedReason = "This event isn't open for reservations yet.";
   else if (startInPast) blockedReason = "This event has already started.";
   else if (soldOut) blockedReason = "Sold out.";
 
-  const disabled = notPublished || soldOut || startInPast || pending || !isSignedIn;
+  const disabled =
+    notPublished || soldOut || startInPast || pending || !isSignedIn;
 
   function onReserve() {
     startTransition(async () => {
       const result = await reserveAction(event.id, { quantity });
       if (!result.ok) {
         toast.error(result.error.message);
+        return;
+      }
+      if (result.data.checkoutUrl) {
+        window.location.href = result.data.checkoutUrl; // paid → off to Stripe
         return;
       }
       toast.success(
@@ -84,18 +94,19 @@ export function ReserveWidget({
         </span>
         <span
           className={
-            soldOut
-              ? "text-sm font-medium text-destructive"
-              : "text-sm text-muted-foreground tabular-nums"
+            soldOut ?
+              "text-sm font-medium text-destructive"
+            : "text-sm text-muted-foreground tabular-nums"
           }
         >
-          {soldOut
-            ? "Sold out"
-            : `${seatsLeft.toLocaleString()} / ${event.capacity.toLocaleString()} seats left`}
+          {soldOut ?
+            "Sold out"
+          : `${seatsLeft.toLocaleString()} / ${event.capacity.toLocaleString()} seats left`
+          }
         </span>
       </div>
 
-      {!isSignedIn ? (
+      {!isSignedIn ?
         <Button
           size="lg"
           className="w-full"
@@ -106,8 +117,7 @@ export function ReserveWidget({
             </Link>
           }
         />
-      ) : (
-        <>
+      : <>
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-muted-foreground">
               Quantity
@@ -139,17 +149,19 @@ export function ReserveWidget({
             onClick={onReserve}
             disabled={disabled}
           >
-            {pending ? <Loader2 className="animate-spin" /> : <Ticket />}
+            {pending ?
+              <Loader2 className="animate-spin" />
+            : <Ticket />}
             {pending ? "Reserving…" : "Reserve"}
           </Button>
 
-          {blockedReason ? (
+          {blockedReason ?
             <p className="text-center text-xs text-muted-foreground">
               {blockedReason}
             </p>
-          ) : null}
+          : null}
         </>
-      )}
+      }
     </aside>
   );
 }

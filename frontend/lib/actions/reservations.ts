@@ -6,6 +6,7 @@ import { serverFetch } from "@/lib/auth/server";
 import type {
   CreateReservationRequest,
   ReservationResponse,
+  ReserveResponse,
 } from "@/types/api";
 
 import { actionError, type ActionResult } from "./result";
@@ -13,9 +14,9 @@ import { actionError, type ActionResult } from "./result";
 export async function reserveAction(
   eventId: number,
   input: CreateReservationRequest,
-): Promise<ActionResult<ReservationResponse>> {
+): Promise<ActionResult<ReserveResponse>> {
   try {
-    const reservation = await serverFetch<ReservationResponse>(
+    const reservation = await serverFetch<ReserveResponse>(
       `/api/events/${eventId}/reservations`,
       { method: "POST", body: JSON.stringify(input) },
     );

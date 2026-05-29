@@ -155,3 +155,7 @@ export interface Page<T> {
 export interface GoogleAuthRequest {
   idToken: string;
 }
+export interface ReserveResponse {
+  reservation: ReservationResponse;
+  checkoutUrl: string | null;
+}
