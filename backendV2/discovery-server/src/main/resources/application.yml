@@ -1,0 +1,12 @@
+server:
+  port: 8761
+
+spring:
+  application:
+    name: discovery-server
+
+eureka:
+  # Those two false flags are the standard "I am the server, not a client" setup
+  client:
+    register-with-eureka: false
+    fetch-registry: false
