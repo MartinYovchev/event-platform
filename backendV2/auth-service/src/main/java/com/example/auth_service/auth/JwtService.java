@@ -39,6 +39,7 @@ public class JwtService {
                 .claim("role", user.getRole().name())
                 .claim("provider", user.getProvider().name())
                 .claim("isOrganizer", Boolean.TRUE.equals(user.getOrganizer()))
+                .claim("name", user.getDisplayName())
                 .build();
         JwsHeader header = JwsHeader.with(SignatureAlgorithm.RS256).keyId(JwtKeyConfig.KID).build();
         return encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();

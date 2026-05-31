@@ -1,12 +1,6 @@
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
-
-# Secrets — never commit the RSA signing private key or env files
-src/main/resources/certs/app.key
-.env
-.env.local
-env
 !**/src/main/**/target/
 !**/src/test/**/target/
 

@@ -4,6 +4,7 @@ import com.example.auth_service.auth.UserRepository;
 import com.example.auth_service.auth.dtos.ChangePasswordRequest;
 import com.example.auth_service.auth.dtos.UpdateProfileRequest;
 import com.example.auth_service.auth.entities.User;
+import com.example.auth_service.auth.messaging.UserEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,10 +19,14 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserEventPublisher userEventPublisher;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       UserEventPublisher userEventPublisher) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userEventPublisher = userEventPublisher;
     }
 
     @Transactional
@@ -43,11 +48,15 @@ public class UserService {
     @Transactional
     public void deleteAccount(String email) {
         User u = requireActive(email);
+        Long userId = u.getId();
         u.setDeletedAt(Instant.now());
-        u.setEmail("deleted_" + u.getId() + "@deleted.local");
+        u.setEmail("deleted_" + userId + "@deleted.local");
         u.setDisplayName("Deleted user");
         u.setPasswordHash(null);
         u.setOrganizer(false);
+        // Tell booking-service to cascade: cancel this user's reservations and
+        // organized events. Booking owns those tables (database-per-service).
+        userEventPublisher.publishUserDeleted(userId);
     }
 
     private User requireActive(String email) {
