@@ -26,7 +26,7 @@ export default async function ReservationsPage({
 
   try {
     data = await serverFetch<Page<ReservationResponse>>(
-      `/api/me/reservations?when=${when}&page=0&size=20`,
+      `/api/reservations/mine?when=${when}&page=0&size=20`,
     );
   } catch (err) {
     errorMessage =

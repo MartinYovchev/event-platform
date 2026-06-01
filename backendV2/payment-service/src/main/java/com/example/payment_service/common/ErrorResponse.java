@@ -1,4 +1,4 @@
-package com.example.backend.common;
+package com.example.payment_service.common;
 
 import java.util.List;
 

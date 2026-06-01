@@ -62,11 +62,11 @@ export default async function DashboardPage() {
     try {
       const [resv, organizerEvents] = await Promise.all([
         serverFetch<Page<ReservationResponse>>(
-          "/api/me/reservations?when=upcoming&page=0&size=5",
+          "/api/reservations/mine?when=upcoming&page=0&size=5",
         ),
         me?.isOrganizer
           ? serverFetch<Page<EventListItemResponse>>(
-              "/api/me/events?page=0&size=5",
+              "/api/events/mine?page=0&size=5",
             )
           : Promise.resolve(null),
       ]);

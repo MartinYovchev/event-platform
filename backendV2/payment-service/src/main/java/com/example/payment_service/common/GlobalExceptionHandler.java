@@ -1,4 +1,4 @@
-package com.example.backend.common;
+package com.example.payment_service.common;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -39,9 +39,6 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of("INVALID_CREDENTIALS", "Invalid email or password"));
     }
 
-    // Unique-index violations (e.g. concurrent reserve hitting the partial unique on
-    // reservations(user_id, event_id) WHERE status='ACTIVE') surface as a 409 rather
-    // than the fallback 500.
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)

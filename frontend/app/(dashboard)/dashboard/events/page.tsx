@@ -71,7 +71,7 @@ export default async function MyEventsPage({
 
   try {
     data = await serverFetch<Page<EventListItemResponse>>(
-      `/api/me/events?${qs.toString()}`,
+      `/api/events/mine?${qs.toString()}`,
     );
   } catch (err) {
     errorMessage =

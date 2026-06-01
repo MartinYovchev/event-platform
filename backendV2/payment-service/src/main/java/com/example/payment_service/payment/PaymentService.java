@@ -85,6 +85,31 @@ public class PaymentService {
         return session.getUrl();
     }
 
+    /**
+     * Confirm a payment by looking the session up directly with Stripe (used when the buyer is
+     * redirected back to the success page). Independent of the webhook — retrieves the session,
+     * and if Stripe reports it paid, marks it PAID and publishes payment.confirmed. Idempotent.
+     * Returns true if the session is paid (whether or not this call was the one that flipped it).
+     */
+    @Transactional
+    public boolean confirmBySession(String sessionId) {
+        if (!enabled) {
+            throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Payments are not configured");
+        }
+        Session session;
+        try {
+            session = Session.retrieve(sessionId);
+        } catch (StripeException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Could not verify payment");
+        }
+        if (!"paid".equals(session.getPaymentStatus())) {
+            return false; // not paid (yet) — caller shows the "being confirmed" fallback
+        }
+        Long reservationId = markPaid(session.getId(), session.getPaymentIntent());
+        if (reservationId != null) publisher.publishConfirmed(reservationId);
+        return true;
+    }
+
     @Transactional
     public void handleWebhook(String payload, String signature) {
         com.stripe.model.Event event;

@@ -53,7 +53,7 @@ public class ReservationService {
     public ReserveResult reserve(Long userId, String userEmail, Long eventId, CreateReservationRequest req) {
         // Phase 1 — validate + hold seats inside a single short transaction.
         HoldOutcome outcome = tx.execute(status -> doHold(userId, eventId, req));
-
+        System.out.println(outcome);
         if (outcome.free()) {
             return new ReserveResult(outcome.reservation(), null);
         }

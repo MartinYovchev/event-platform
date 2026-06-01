@@ -48,7 +48,7 @@ export async function changePasswordAction(
 
 export async function becomeOrganizerAction(): Promise<ActionResult<UserResponse>> {
   try {
-    const user = await serverFetch<UserResponse>("/api/me/become-organizer", {
+    const user = await serverFetch<UserResponse>("/api/users/me/become-organizer", {
       method: "POST",
     });
     revalidatePath("/", "layout");

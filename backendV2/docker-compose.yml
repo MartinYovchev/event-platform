@@ -1,0 +1,88 @@
+# Shared infrastructure for the backendV2 microservices.
+# One command brings up all 3 Postgres databases + RabbitMQ:
+#     cd backendV2 && docker compose up -d
+# The 5 Spring Boot apps are started separately (./mvnw spring-boot:run) and
+# connect to these over localhost (5433/5434/5435/5672) — unchanged.
+name: eventplatform
+
+services:
+  postgres-auth:
+    image: postgres:16-alpine
+    container_name: auth-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: eventplatform
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: eventplatform_auth
+    ports:
+      - "5433:5432"
+    volumes:
+      - auth_pgdata:/var/lib/postgresql/data
+      - ./auth-service/docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eventplatform -d eventplatform_auth"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-booking:
+    image: postgres:16-alpine
+    container_name: booking-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: eventplatform
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: eventplatform_booking
+    ports:
+      - "5434:5432"
+    volumes:
+      - booking_pgdata:/var/lib/postgresql/data
+      - ./booking-service/docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eventplatform -d eventplatform_booking"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-payment:
+    image: postgres:16-alpine
+    container_name: payment-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: eventplatform
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: eventplatform_payment
+    ports:
+      - "5435:5432"
+    volumes:
+      - payment_pgdata:/var/lib/postgresql/data
+      - ./payment-service/docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eventplatform -d eventplatform_payment"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: eventplatform-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"      # AMQP
+      - "15672:15672"    # management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  auth_pgdata:
+  booking_pgdata:
+  payment_pgdata:
+  rabbitmq_data:

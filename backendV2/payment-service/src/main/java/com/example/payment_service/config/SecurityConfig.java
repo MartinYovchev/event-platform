@@ -22,7 +22,7 @@ public class SecurityConfig {
                         // Stripe webhook (signature-verified) and service-to-service internal
                         // endpoints carry no end-user JWT, so they are not authenticated here.
                         // /internal/** is not exposed through the gateway.
-                        .requestMatchers("/api/payments/webhook", "/internal/**").permitAll()
+                        .requestMatchers("/api/payments/webhook", "/api/payments/confirm", "/internal/**").permitAll()
                         .requestMatchers("/error", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 )

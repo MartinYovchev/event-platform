@@ -2,7 +2,7 @@ import 'server-only';
 import { ApiError, parseErrorBody } from '@/lib/errors';
 import { getSessionToken } from './session';
 
-const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8081';
+const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8080';
 
 type ServerFetchInit = RequestInit & {
   auth?: boolean;

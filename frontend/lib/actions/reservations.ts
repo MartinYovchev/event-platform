@@ -29,13 +29,30 @@ export async function reserveAction(
   }
 }
 
+export async function confirmReservationPaymentAction(
+  sessionId: string,
+): Promise<ActionResult<{ paid: boolean }>> {
+  try {
+    const result = await serverFetch<{ paid: boolean }>("/api/payments/confirm", {
+      method: "POST",
+      body: JSON.stringify({ sessionId }),
+      auth: false,
+    });
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/reservations");
+    return { ok: true, data: result };
+  } catch (err) {
+    return actionError(err, "Could not confirm payment.");
+  }
+}
+
 export async function cancelReservationAction(
   reservationId: number,
   eventId?: number,
 ): Promise<ActionResult<ReservationResponse>> {
   try {
     const reservation = await serverFetch<ReservationResponse>(
-      `/api/me/reservations/${reservationId}/cancel`,
+      `/api/reservations/${reservationId}/cancel`,
       { method: "POST" },
     );
     revalidatePath("/dashboard");

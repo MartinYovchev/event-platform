@@ -1,5 +1,6 @@
 package com.example.booking_service.booking.payment;
 
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -8,7 +9,8 @@ public class PaymentClient {
 
     private final RestClient restClient;
 
-    public PaymentClient(RestClient.Builder loadBalancedRestClientBuilder) {
+    // @LoadBalanced qualifier picks the Eureka-aware builder (not the @Primary plain one).
+    public PaymentClient(@LoadBalanced RestClient.Builder loadBalancedRestClientBuilder) {
         this.restClient = loadBalancedRestClientBuilder
                 .baseUrl("http://payment-service")
                 .build();
