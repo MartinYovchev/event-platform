@@ -360,7 +360,7 @@ export function EventForm(props: EventFormProps) {
           />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="price">Price (USD)</Label>
+          <Label htmlFor="price">Price (EUR)</Label>
           <Input
             id="price"
             inputMode="decimal"

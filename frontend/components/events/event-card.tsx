@@ -2,7 +2,7 @@ import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import { CalendarDays, MapPin } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 import type { EventListItemResponse } from "@/types/api";
 
 function initialOf(title: string): string {
@@ -25,12 +25,6 @@ function formatRange(startIso: string, endIso: string): string {
   } catch {
     return startIso;
   }
-}
-
-function formatPrice(price: string): string {
-  const n = Number(price);
-  if (!Number.isFinite(n) || n === 0) return "Free";
-  return `$${n.toFixed(2)}`;
 }
 
 export function EventCard({ event }: { event: EventListItemResponse }) {

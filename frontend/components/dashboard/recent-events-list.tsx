@@ -83,7 +83,7 @@ export function RecentEventsList({
               </div>
             </div>
             <span className="shrink-0 text-sm font-medium text-foreground tabular-nums">
-              ${event.price}
+              €{event.price}
             </span>
           </li>
         );

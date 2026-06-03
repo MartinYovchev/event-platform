@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EventRowActions } from "@/components/events/event-row-actions";
+import { formatPrice } from "@/lib/utils";
 import type { EventListItemResponse } from "@/types/api";
 
 function formatStartAt(iso: string): string {
@@ -18,12 +19,6 @@ function formatStartAt(iso: string): string {
   } catch {
     return iso;
   }
-}
-
-function formatPrice(price: string): string {
-  const n = Number(price);
-  if (!Number.isFinite(n) || n === 0) return "Free";
-  return `$${n.toFixed(2)}`;
 }
 
 export function MyEventsTable({

@@ -15,13 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { reserveAction } from "@/lib/actions/reservations";
+import { formatPrice } from "@/lib/utils";
 import type { EventResponse, UserResponse } from "@/types/api";
-
-function formatPrice(price: string): string {
-  const n = Number(price);
-  if (!Number.isFinite(n) || n === 0) return "Free";
-  return `$${n.toFixed(2)}`;
-}
 
 export function ReserveWidget({
   event,
