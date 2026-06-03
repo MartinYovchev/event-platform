@@ -1,6 +1,5 @@
 package com.example.booking_service.booking.reservation;
 
-import com.example.booking_service.booking.common.Claims;
 import com.example.booking_service.booking.reservation.dto.CreateReservationRequest;
 import com.example.booking_service.booking.reservation.dto.ReservationResponse;
 import com.example.booking_service.booking.reservation.dto.ReserveResponse;
@@ -32,7 +31,7 @@ public class ReservationController {
             @PathVariable("id") Long eventId,
             @Valid @RequestBody CreateReservationRequest req,
             @AuthenticationPrincipal Jwt jwt) {
-        Long uid = requireUid(jwt);
+        Long uid = ReservationService.requireUid(jwt);
         ReservationService.ReserveResult result =
                 reservationService.reserve(uid, jwt.getSubject(), eventId, req);
         ReserveResponse body = new ReserveResponse(
@@ -46,21 +45,13 @@ public class ReservationController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal Jwt jwt) {
-        boolean upcoming = "upcoming".equalsIgnoreCase(when);
-        return reservationService.listMine(requireUid(jwt), upcoming, page, size)
+        return reservationService.listMine(ReservationService.requireUid(jwt), when, page, size)
                 .map(ReservationResponse::from);
     }
 
     @PostMapping("/api/reservations/{id}/cancel")
     public ReservationResponse cancel(@PathVariable("id") Long reservationId,
                                       @AuthenticationPrincipal Jwt jwt) {
-        return ReservationResponse.from(reservationService.cancel(requireUid(jwt), reservationId));
-    }
-
-    private static Long requireUid(Jwt jwt) {
-        if (jwt == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-        Long uid = Claims.uid(jwt);
-        if (uid == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-        return uid;
+        return ReservationResponse.from(reservationService.cancel(ReservationService.requireUid(jwt), reservationId));
     }
 }

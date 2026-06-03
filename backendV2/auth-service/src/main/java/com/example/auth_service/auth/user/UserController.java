@@ -23,17 +23,15 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final UserRepository userRepository;
     private final UserService userService;
 
-    public UserController(UserRepository userRepository, UserService userService) {
-        this.userRepository = userRepository;
+    public UserController( UserService userService) {
         this.userService = userService;
     }
 
     @GetMapping("/me")
     public UserResponse me(Authentication auth) {
-        return UserResponse.from(requireActive(auth));
+        return UserResponse.from(userService.requireActive(auth.getName()));
     }
 
     @PatchMapping("/me")
@@ -52,7 +50,7 @@ public class UserController {
     @PostMapping("/me/become-organizer")
     @Transactional
     public UserResponse becomeOrganizer(Authentication auth) {
-        User u = requireActive(auth);
+        User u = userService.requireActive(auth.getName());
         u.setOrganizer(true);
         return UserResponse.from(u);
     }
@@ -62,13 +60,5 @@ public class UserController {
         if (auth == null || auth.getName() == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         userService.deleteAccount(auth.getName());
         return ResponseEntity.noContent().build();
-    }
-
-    private User requireActive(Authentication auth) {
-        if (auth == null || auth.getName() == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-        }
-        return userRepository.findByEmailAndDeletedAtIsNull(auth.getName())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
     }
 }

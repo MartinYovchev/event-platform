@@ -46,24 +46,16 @@ public class Payment {
     public Long getReservationId() { return reservationId; }
     public void setReservationId(Long reservationId) { this.reservationId = reservationId; }
 
-    public String getStripeSessionId() { return stripeSessionId; }
     public void setStripeSessionId(String stripeSessionId) { this.stripeSessionId = stripeSessionId; }
 
-    public String getStripePaymentIntentId() { return stripePaymentIntentId; }
     public void setStripePaymentIntentId(String stripePaymentIntentId) { this.stripePaymentIntentId = stripePaymentIntentId; }
 
-    public Long getAmountMinor() { return amountMinor; }
     public void setAmountMinor(Long amountMinor) { this.amountMinor = amountMinor; }
 
-    public String getCurrency() { return currency; }
     public void setCurrency(String currency) { this.currency = currency; }
 
     public PaymentStatus getStatus() { return status; }
     public void setStatus(PaymentStatus status) { this.status = status; }
 
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-
-    public Instant getPaidAt() { return paidAt; }
     public void setPaidAt(Instant paidAt) { this.paidAt = paidAt; }
 }

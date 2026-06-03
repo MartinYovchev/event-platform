@@ -12,8 +12,6 @@ import java.util.Optional;
 
 public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecificationExecutor<Event> {
 
-    Optional<Event> findByIdAndStatus(Long id, EventStatus status);
-
     List<Event> findAllByOrganizerIdAndStatusIn(Long organizerId, Collection<EventStatus> statuses);
 
     /**

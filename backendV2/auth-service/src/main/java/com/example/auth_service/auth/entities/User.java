@@ -78,20 +78,12 @@ public class User {
         return role;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
     public AuthProvider getProvider() {
         return provider;
     }
 
     public void setProvider(AuthProvider provider) {
         this.provider = provider;
-    }
-
-    public String getProviderSubject() {
-        return providerSubject;
     }
 
     public void setProviderSubject(String providerSubject) {
@@ -116,9 +108,5 @@ public class User {
 
     public Instant getCreatedAt() {
         return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
     }
 }

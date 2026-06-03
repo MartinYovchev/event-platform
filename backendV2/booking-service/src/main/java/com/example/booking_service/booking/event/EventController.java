@@ -25,6 +25,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 
+import static com.example.booking_service.booking.event.EventService.requireUid;
+
 @RestController
 @RequestMapping("/api/events")
 public class EventController {
@@ -91,12 +93,5 @@ public class EventController {
     public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
         eventService.deleteDraft(requireUid(jwt), id);
         return ResponseEntity.noContent().build();
-    }
-
-    private static Long requireUid(Jwt jwt) {
-        if (jwt == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-        Long uid = Claims.uid(jwt);
-        if (uid == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-        return uid;
     }
 }

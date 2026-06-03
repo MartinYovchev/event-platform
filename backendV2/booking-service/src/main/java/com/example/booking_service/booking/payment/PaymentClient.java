@@ -9,14 +9,12 @@ public class PaymentClient {
 
     private final RestClient restClient;
 
-    // @LoadBalanced qualifier picks the Eureka-aware builder (not the @Primary plain one).
     public PaymentClient(@LoadBalanced RestClient.Builder loadBalancedRestClientBuilder) {
         this.restClient = loadBalancedRestClientBuilder
                 .baseUrl("http://payment-service")
                 .build();
     }
 
-    /** Calls payment-service to create a Stripe checkout session. Returns the checkout URL. */
     public String createCheckout(CheckoutRequest req) {
         CheckoutResponse resp = restClient.post()
                 .uri("/internal/payments/checkout")

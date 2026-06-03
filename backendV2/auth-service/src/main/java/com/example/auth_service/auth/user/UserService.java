@@ -54,12 +54,10 @@ public class UserService {
         u.setDisplayName("Deleted user");
         u.setPasswordHash(null);
         u.setOrganizer(false);
-        // Tell booking-service to cascade: cancel this user's reservations and
-        // organized events. Booking owns those tables (database-per-service).
         userEventPublisher.publishUserDeleted(userId);
     }
 
-    private User requireActive(String email) {
+    public User requireActive(String email) {
         return userRepository.findByEmailAndDeletedAtIsNull(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
     }

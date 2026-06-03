@@ -9,8 +9,6 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-// PATCH semantics: only non-null fields are applied. The service decides which
-// fields are legal based on the event's current status.
 public record UpdateEventRequest(
         @Size(max = 200) String title,
         @Size(max = 5000) String description,

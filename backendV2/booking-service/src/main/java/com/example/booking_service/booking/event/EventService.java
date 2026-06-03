@@ -1,5 +1,6 @@
 package com.example.booking_service.booking.event;
 
+import com.example.booking_service.booking.common.Claims;
 import com.example.booking_service.booking.event.dto.CreateEventRequest;
 import com.example.booking_service.booking.event.dto.UpdateEventRequest;
 import com.example.booking_service.booking.reservation.Reservation;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -128,12 +130,11 @@ public class EventService {
         return e;
     }
 
-    // Shared cascade: cancel every live (ACTIVE/PENDING) reservation on this event, zero
-    // seats_taken, mark the event itself CANCELLED. Must be called inside an active transaction.
-    // Used by cancel(callerId, id) (after the ownership check) and by the UserDeleted Rabbit
-    // consumer when cleaning up a deleted organizer's events.
     public void applyCancellation(Event e) {
-        if (e.getStatus() == EventStatus.CANCELLED) return;
+        if (e.getStatus() == EventStatus.CANCELLED) {
+            return;
+        }
+
         for (Reservation r : reservationRepository.findAllByEventAndStatusIn(
                 e, List.of(ReservationStatus.ACTIVE, ReservationStatus.PENDING))) {
             r.setStatus(ReservationStatus.CANCELLED);
@@ -142,7 +143,6 @@ public class EventService {
         e.setStatus(EventStatus.CANCELLED);
     }
 
-    /** UserDeleted consumer: cancel every DRAFT/PUBLISHED event organized by a deleted user. */
     @Transactional
     public void cancelEventsForOrganizer(Long organizerId) {
         for (Event e : eventRepository.findAllByOrganizerIdAndStatusIn(
@@ -195,5 +195,12 @@ public class EventService {
         if (r.description()   != null) e.setDescription(r.description());
         if (r.coverImageUrl() != null) e.setCoverImageUrl(r.coverImageUrl());
         if (r.cancellationCutoffHours() != null) e.setCancellationCutoffHours(r.cancellationCutoffHours());
+    }
+
+    public static Long requireUid(Jwt jwt) {
+        if (jwt == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        Long uid = Claims.uid(jwt);
+        if (uid == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        return uid;
     }
 }
