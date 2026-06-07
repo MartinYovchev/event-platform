@@ -29,6 +29,18 @@ public class Reservation {
     @Column(nullable = false)
     private ReservationStatus status = ReservationStatus.ACTIVE;
 
+    @Column(name = "user_email")
+    private String userEmail;
+
+    @Column(name = "user_name")
+    private String userName;
+
+    @Column(nullable = false)
+    private boolean attended = false;
+
+    @Column(name = "checked_in_at")
+    private Instant checkedInAt;
+
     @Generated(event = EventType.INSERT)
     @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
     private Instant createdAt;
@@ -75,6 +87,38 @@ public class Reservation {
 
     public void setStatus(ReservationStatus status) {
         this.status = status;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public boolean isAttended() {
+        return attended;
+    }
+
+    public void setAttended(boolean attended) {
+        this.attended = attended;
+    }
+
+    public Instant getCheckedInAt() {
+        return checkedInAt;
+    }
+
+    public void setCheckedInAt(Instant checkedInAt) {
+        this.checkedInAt = checkedInAt;
     }
 
     public Instant getCreatedAt() {

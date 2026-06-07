@@ -1,5 +1,6 @@
 package com.example.booking_service.booking.reservation;
 
+import com.example.booking_service.booking.common.Claims;
 import com.example.booking_service.booking.reservation.dto.CreateReservationRequest;
 import com.example.booking_service.booking.reservation.dto.ReservationResponse;
 import com.example.booking_service.booking.reservation.dto.ReserveResponse;
@@ -33,7 +34,7 @@ public class ReservationController {
             @AuthenticationPrincipal Jwt jwt) {
         Long uid = ReservationService.requireUid(jwt);
         ReservationService.ReserveResult result =
-                reservationService.reserve(uid, jwt.getSubject(), eventId, req);
+                reservationService.reserve(uid, jwt.getSubject(), Claims.name(jwt), eventId, req);
         ReserveResponse body = new ReserveResponse(
                 ReservationResponse.from(result.reservation()), result.checkoutUrl());
         return ResponseEntity.status(HttpStatus.CREATED).body(body);

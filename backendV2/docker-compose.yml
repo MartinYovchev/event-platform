@@ -1,8 +1,3 @@
-# Shared infrastructure for the backendV2 microservices.
-# One command brings up all 3 Postgres databases + RabbitMQ:
-#     cd backendV2 && docker compose up -d
-# The 5 Spring Boot apps are started separately (./mvnw spring-boot:run) and
-# connect to these over localhost (5433/5434/5435/5672) — unchanged.
 name: eventplatform
 
 services:
@@ -77,6 +72,19 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: eventplatform-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"      
+      - "8025:8025"     
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8025/readyz"]
       interval: 10s
       timeout: 5s
       retries: 10

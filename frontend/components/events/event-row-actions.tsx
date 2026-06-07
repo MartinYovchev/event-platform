@@ -7,6 +7,7 @@ import {
   Eye,
   MoreHorizontal,
   Pencil,
+  ScanLine,
   Send,
   Trash2,
   XCircle,
@@ -111,6 +112,14 @@ export function EventRowActions({ eventId, eventTitle }: EventRowActionsProps) {
               <Link href={`/dashboard/events/${eventId}/edit`}>
                 <Pencil />
                 Edit
+              </Link>
+            }
+          />
+          <DropdownMenuItem
+            render={
+              <Link href={`/dashboard/events/${eventId}/check-in`}>
+                <ScanLine />
+                Check in
               </Link>
             }
           />

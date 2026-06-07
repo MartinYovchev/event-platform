@@ -4,6 +4,8 @@ import com.example.booking_service.booking.event.Event;
 import com.example.booking_service.booking.event.EventRepository;
 import com.example.booking_service.booking.event.EventService;
 import com.example.booking_service.booking.event.EventStatus;
+import com.example.booking_service.booking.messaging.ReservationConfirmedEvent;
+import com.example.booking_service.booking.messaging.ReservationEventPublisher;
 import com.example.booking_service.booking.payment.CheckoutRequest;
 import com.example.booking_service.booking.payment.PaymentClient;
 import com.example.booking_service.booking.reservation.dto.CreateReservationRequest;
@@ -27,6 +29,8 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final EventRepository eventRepository;
     private final PaymentClient paymentClient;
+    private final CheckInTokenService checkInTokenService;
+    private final ReservationEventPublisher reservationEventPublisher;
     private final TransactionTemplate tx;
     private final TransactionTemplate readOnlyTx;
     private final String currency;
@@ -36,23 +40,29 @@ public class ReservationService {
     public ReservationService(ReservationRepository reservationRepository,
                               EventRepository eventRepository,
                               PaymentClient paymentClient,
+                              CheckInTokenService checkInTokenService,
+                              ReservationEventPublisher reservationEventPublisher,
                               PlatformTransactionManager txManager,
                               @Value("${app.currency:eur}") String currency) {
         this.reservationRepository = reservationRepository;
         this.eventRepository = eventRepository;
         this.paymentClient = paymentClient;
+        this.checkInTokenService = checkInTokenService;
+        this.reservationEventPublisher = reservationEventPublisher;
         this.tx = new TransactionTemplate(txManager);
         this.readOnlyTx = new TransactionTemplate(txManager);
         this.readOnlyTx.setReadOnly(true);
         this.currency = currency;
     }
 
-    private record HoldOutcome(boolean free, Reservation reservation,
+    private record HoldOutcome(boolean free, Reservation reservation, ReservationConfirmedEvent confirmedEvent,
                                Long reservationId, String eventTitle, long amountMinor) {}
 
-    public ReserveResult reserve(Long userId, String userEmail, Long eventId, CreateReservationRequest req) {
-        HoldOutcome outcome = tx.execute(status -> doHold(userId, eventId, req));
+    public ReserveResult reserve(Long userId, String userEmail, String userName, Long eventId, CreateReservationRequest req) {
+        HoldOutcome outcome = tx.execute(status -> doHold(userId, userEmail, userName, eventId, req));
         if (outcome.free()) {
+            // Free events are ACTIVE immediately — notify after the hold transaction has committed.
+            reservationEventPublisher.publishConfirmed(outcome.confirmedEvent());
             return new ReserveResult(outcome.reservation(), null);
         }
 
@@ -67,7 +77,7 @@ public class ReservationService {
         }
     }
 
-    private HoldOutcome doHold(Long userId, Long eventId, CreateReservationRequest req) {
+    private HoldOutcome doHold(Long userId, String userEmail, String userName, Long eventId, CreateReservationRequest req) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -85,6 +95,8 @@ public class ReservationService {
                     .findByUserIdAndEventAndStatus(userId, event, ReservationStatus.ACTIVE)
                     .map(existing -> {
                         existing.setQuantity(existing.getQuantity() + req.quantity());
+                        existing.setUserEmail(userEmail);
+                        existing.setUserName(userName);
                         return existing;
                     })
                     .orElseGet(() -> {
@@ -93,9 +105,11 @@ public class ReservationService {
                         nr.setEvent(event);
                         nr.setQuantity(req.quantity());
                         nr.setStatus(ReservationStatus.ACTIVE);
+                        nr.setUserEmail(userEmail);
+                        nr.setUserName(userName);
                         return reservationRepository.save(nr);
                     });
-            return new HoldOutcome(true, r, r.getId(), event.getTitle(), 0L);
+            return new HoldOutcome(true, r, buildConfirmedEvent(r), r.getId(), event.getTitle(), 0L);
         }
 
         reservationRepository.findByUserIdAndEventAndStatus(userId, event, ReservationStatus.PENDING)
@@ -109,19 +123,78 @@ public class ReservationService {
         Reservation r = new Reservation();
         r.setUserId(userId); r.setEvent(event);
         r.setQuantity(req.quantity()); r.setStatus(ReservationStatus.PENDING);
+        r.setUserEmail(userEmail); r.setUserName(userName);
         r = reservationRepository.save(r);
 
         long amountMinor = event.getPrice().movePointRight(2).longValueExact() * req.quantity();
-        return new HoldOutcome(false, r, r.getId(), event.getTitle(), amountMinor);
+        return new HoldOutcome(false, r, null, r.getId(), event.getTitle(), amountMinor);
+    }
+
+    /** Build the confirmation event (mints the signed QR token) from a committed-state reservation. */
+    private ReservationConfirmedEvent buildConfirmedEvent(Reservation r) {
+        Event e = r.getEvent();
+        return new ReservationConfirmedEvent(
+                r.getId(), e.getId(), e.getTitle(), e.getLocation(), e.getStartAt(),
+                r.getQuantity(), r.getUserEmail(), r.getUserName(), checkInTokenService.mint(r));
     }
 
     public void confirmPayment(Long reservationId) {
-        tx.executeWithoutResult(status ->
-                reservationRepository.findById(reservationId).ifPresent(r -> {
-                    if (r.getStatus() == ReservationStatus.PENDING) {
-                        r.setStatus(ReservationStatus.ACTIVE);
-                    }
-                }));
+        // Build the confirmation event inside the tx (only on a real PENDING->ACTIVE transition),
+        // then publish after commit so the email reflects committed state and we never double-send.
+        ReservationConfirmedEvent event = tx.execute(status ->
+                reservationRepository.findById(reservationId)
+                        .filter(r -> r.getStatus() == ReservationStatus.PENDING)
+                        .map(r -> {
+                            r.setStatus(ReservationStatus.ACTIVE);
+                            return buildConfirmedEvent(r);
+                        })
+                        .orElse(null));
+        if (event != null) {
+            reservationEventPublisher.publishConfirmed(event);
+        }
+    }
+
+    public record CheckInView(Long reservationId, Long eventId, String name, String email,
+                              Integer quantity, boolean attended, Instant checkedInAt) {}
+
+    /** Read-only step 1: validate the scan and return the attendee's identity (no mutation). */
+    public CheckInView previewCheckIn(Long organizerUid, Long eventId, Long reservationId) {
+        return readOnlyTx.execute(status -> toView(loadValidForCheckIn(organizerUid, eventId, reservationId)));
+    }
+
+    /** Step 2: re-validate then mark the reservation as attended. */
+    public CheckInView confirmCheckIn(Long organizerUid, Long eventId, Long reservationId) {
+        return tx.execute(status -> {
+            Reservation r = loadValidForCheckIn(organizerUid, eventId, reservationId);
+            if (r.isAttended()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Already checked in at " + r.getCheckedInAt());
+            }
+            r.setAttended(true);
+            r.setCheckedInAt(Instant.now());
+            return toView(r);
+        });
+    }
+
+    private Reservation loadValidForCheckIn(Long organizerUid, Long eventId, Long reservationId) {
+        Reservation r = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reservation not found"));
+        Event e = r.getEvent();
+        if (!e.getId().equals(eventId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token does not match this event");
+        }
+        if (!e.getOrganizerId().equals(organizerUid)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your event");
+        }
+        if (r.getStatus() != ReservationStatus.ACTIVE) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Reservation is not active");
+        }
+        return r;
+    }
+
+    private CheckInView toView(Reservation r) {
+        return new CheckInView(r.getId(), r.getEvent().getId(), r.getUserName(), r.getUserEmail(),
+                r.getQuantity(), r.isAttended(), r.getCheckedInAt());
     }
 
     public void releasePending(Long reservationId) {

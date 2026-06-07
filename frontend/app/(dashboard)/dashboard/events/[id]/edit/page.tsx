@@ -1,5 +1,8 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ScanLine } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { EventStatusBadge } from "@/components/events/event-status-badge";
 import { CancelEventButton } from "@/components/events/cancel-event-button";
 import { DeleteEventButton } from "@/components/events/delete-event-button";
@@ -50,6 +53,15 @@ export default async function EditEventPage({ params }: Props) {
         }
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              render={
+                <Link href={`/dashboard/events/${event.id}/check-in`}>
+                  <ScanLine />
+                  Check in
+                </Link>
+              }
+            />
             <PublishButton eventId={event.id} status={event.status} />
             <CancelEventButton eventId={event.id} status={event.status} />
             <DeleteEventButton eventId={event.id} status={event.status} />

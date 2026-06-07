@@ -119,6 +119,18 @@ export interface CreateReservationRequest {
   quantity: number;
 }
 
+// ---------- Check-in (organizer) ----------
+
+export interface CheckInView {
+  reservationId: number;
+  eventId: number;
+  name: string;
+  email: string;
+  quantity: number;
+  attended: boolean;
+  checkedInAt: string | null;
+}
+
 // ---------- Errors ----------
 
 export interface ErrorFieldError {

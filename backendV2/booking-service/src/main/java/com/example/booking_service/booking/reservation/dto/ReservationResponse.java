@@ -11,6 +11,8 @@ public record ReservationResponse(
         Instant eventStartAt,
         Integer quantity,
         String status,
+        boolean attended,
+        Instant checkedInAt,
         Instant createdAt
 ) {
     public static ReservationResponse from(Reservation r) {
@@ -21,6 +23,8 @@ public record ReservationResponse(
                 r.getEvent().getStartAt(),
                 r.getQuantity(),
                 r.getStatus().name(),
+                r.isAttended(),
+                r.getCheckedInAt(),
                 r.getCreatedAt()
         );
     }

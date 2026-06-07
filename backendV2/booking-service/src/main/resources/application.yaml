@@ -40,3 +40,8 @@ eureka:
 app:
   # Currency sent to payment-service when creating a Stripe checkout for a paid event.
   currency: ${PAYMENT_CURRENCY:eur}
+  # HMAC secret used to sign/verify the QR check-in token. Lives only in booking-service
+  # (it both mints the token at confirmation and verifies it at the door). Override in prod.
+  checkin:
+    secret: ${CHECKIN_SECRET:change-me-dev-only-checkin-secret-please-override-0123456789}
+    grace-hours: ${CHECKIN_GRACE_HOURS:6}

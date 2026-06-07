@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Your ticket</title>
+</head>
+<body style="margin:0; padding:0; background:#f4f5f7; font-family:Arial,Helvetica,sans-serif; color:#1f2933;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7; padding:24px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="560" cellpadding="0" cellspacing="0"
+                       style="background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+                    <tr>
+                        <td style="background:#4f46e5; padding:24px 32px; color:#ffffff;">
+                            <h1 style="margin:0; font-size:20px;">You're booked! 🎟️</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:32px;">
+                            <p style="margin:0 0 16px; font-size:15px;">
+                                Hi <strong th:text="${name}">there</strong>,
+                            </p>
+                            <p style="margin:0 0 24px; font-size:15px; line-height:1.5;">
+                                Your reservation is confirmed. Show the QR code below at the door — the
+                                organizer will scan it to check you in.
+                            </p>
+
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                                   style="border:1px solid #e4e7eb; border-radius:8px;">
+                                <tr>
+                                    <td style="padding:16px 20px; font-size:14px;">
+                                        <div style="margin-bottom:6px;"><strong th:text="${eventTitle}">Event title</strong></div>
+                                        <div style="color:#52606d;" th:text="${eventLocation}">Location</div>
+                                        <div style="color:#52606d;" th:text="${eventWhen}">When</div>
+                                        <div style="color:#52606d;">
+                                            Tickets: <span th:text="${quantity}">1</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <div style="text-align:center; margin:32px 0 8px;">
+                                <img src="cid:qr" alt="Your check-in QR code" width="240" height="240"
+                                     style="border:8px solid #ffffff; border-radius:8px;"/>
+                            </div>
+                            <p style="text-align:center; color:#7b8794; font-size:12px; margin:0;">
+                                Keep this code private — it's your ticket.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:16px 32px; background:#fafbfc; color:#9aa5b1; font-size:12px;">
+                            Event Platform · This is an automated message.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
